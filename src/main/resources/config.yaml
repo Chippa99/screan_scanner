@@ -1,0 +1,45 @@
+delay: 1000
+targets:
+  - action:
+      actionType: NOTHING
+      targetText: text
+      locationX: 100
+      locationY: 100
+    areaX: 500
+    areaY: 500
+    areaWidth: 100
+    areaHeight: 120
+  - action:
+      actionType: NOTHING
+      targetText: text
+      locationX: 100
+      locationY: 100
+    areaX: 610
+    areaY: 500
+    areaWidth: 100
+    areaHeight: 120
+  - action:
+      actionType: NOTHING
+      targetText: text
+      locationX: 100
+      locationY: 100
+    areaX: 710
+    areaY: 500
+    areaWidth: 100
+    areaHeight: 120
+
+beforeActionsList:
+  delayBetweenActions: 500
+  listActions:
+      - actionType: NOTHING
+        targetText: t
+        locationX: 345
+        locationY: 567
+
+afterActionsList:
+  delayBetweenActions: 500
+  listActions:
+      - actionType: NOTHING
+        targetText: t
+        locationX: 345
+        locationY: 787
