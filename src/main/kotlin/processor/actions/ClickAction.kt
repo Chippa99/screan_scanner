@@ -14,7 +14,7 @@ class ClickAction : Action {
         robot.mouseMove(location.x, location.y)
 
         robot.mousePress(InputEvent.BUTTON1_DOWN_MASK)
-        Thread.sleep(Random.nextLong(100,200))
+        Thread.sleep(Random.nextLong(10,50))
         robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK)
         return "clicked"
     }

@@ -3,6 +3,7 @@ package processor
 import CircleDebugFigure
 import DebugWindow
 import RectangleDebugFigure
+import database.core.H2Database
 import net.sourceforge.tess4j.Tesseract
 import processor.actions.ActionFactory
 import processor.configs.ListTargets
@@ -22,7 +23,7 @@ import java.util.concurrent.TimeUnit
 import javax.swing.SwingUtilities
 import kotlin.io.path.Path
 
-class TesseractTextFindProcessor() {
+class TesseractTextFindProcessor {
     private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(
         1
     )
@@ -32,7 +33,7 @@ class TesseractTextFindProcessor() {
     private val propertiesPath: File = Path("config.yaml").toFile()
     private val properties: ListTargets = PropertiesParser.parseProperties(propertiesPath)
     private val actionFactory = ActionFactory()
-
+    private val database = H2Database("screen_scanner", "h2user", "")
     fun textFindOnImage(bufferedImage: BufferedImage): String {
         //Это не хорошо, но сделано для потокобезопасности
         val instance: Tesseract = Tesseract()
@@ -40,6 +41,7 @@ class TesseractTextFindProcessor() {
     }
 
     fun run() {
+        database.deleteAllDataForLastWeek()
         SwingUtilities.invokeLater {
             //FIXME всё ещё по JFrame создаётся на каждый объект
             // производительность это не решает, но выглядит стрёмно
@@ -75,6 +77,7 @@ class TesseractTextFindProcessor() {
                 )
             }
         }
+
         scheduler.scheduleWithFixedDelay({
             val beforeDelay = properties.beforeActionsList.delayBetweenActions
             properties.beforeActionsList.listActions.forEach { action ->
@@ -83,13 +86,13 @@ class TesseractTextFindProcessor() {
                 Thread.sleep(beforeDelay)
             }
 
-            val start = System.currentTimeMillis()
             val countDownLatch = CountDownLatch(properties.targets.size)
             properties.targets.forEach { target ->
                 executor.submit {
                     try {
                         val resultText = textFindOnImage(target.getBufferedImage())
-                        println("Result: $resultText")
+                        println("Result: { $resultText }")
+                        executor.submit { database.addObject(resultText.trim()) }
                         //extends on others types search substring
                         if (resultText.contains(target.action.targetText)) {
                             val action = actionFactory.getAction(target.action.actionType)
@@ -102,14 +105,13 @@ class TesseractTextFindProcessor() {
             }
 
             countDownLatch.await()
-            val end = System.currentTimeMillis()
-            println("Execution time: ${end-start}")
             val afterDelay = properties.beforeActionsList.delayBetweenActions
             properties.afterActionsList.listActions.forEach { action ->
                 val customAction = actionFactory.getAction(action.actionType)
                 customAction.make(Point(action.locationX + 5, action.locationY + 5))
                 Thread.sleep(afterDelay)
             }
+            executor.submit { println("______________________\n${database.getObjectsPeerToday()}\n____________________") }
         }, 0 ,properties.delay, TimeUnit.MILLISECONDS)
     }
 }
