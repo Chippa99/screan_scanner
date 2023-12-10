@@ -3,8 +3,8 @@ targets:
   - action:
       actionType: NOTHING
       targetText: text
-      locationX: 100
-      locationY: 100
+      locationX: 560
+      locationY: 550
     areaX: 500
     areaY: 500
     areaWidth: 100
@@ -12,8 +12,8 @@ targets:
   - action:
       actionType: NOTHING
       targetText: text
-      locationX: 100
-      locationY: 100
+      locationX: 670
+      locationY: 550
     areaX: 610
     areaY: 500
     areaWidth: 100
@@ -21,8 +21,8 @@ targets:
   - action:
       actionType: NOTHING
       targetText: text
-      locationX: 100
-      locationY: 100
+      locationX: 760
+      locationY: 550
     areaX: 710
     areaY: 500
     areaWidth: 100
