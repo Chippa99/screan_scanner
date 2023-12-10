@@ -9,6 +9,6 @@ data class StatisticObject(
     private val count: Int
 ) {
     override fun toString(): String {
-        return "{ id: $id name: $name datetime: $datetime count: $count } "
+        return "{ name: $name datetime: $datetime count: $count } "
     }
 }

@@ -12,21 +12,17 @@ import java.awt.Point
 import java.awt.Rectangle
 import java.awt.image.BufferedImage
 import java.io.File
-import java.lang.Exception
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.swing.SwingUtilities
 import kotlin.io.path.Path
+import kotlin.system.exitProcess
 
 class TesseractTextFindProcessor {
-    private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(
-        1
-    )
+    private var scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
     private val executor: ExecutorService = Executors.newFixedThreadPool(
         Runtime.getRuntime().availableProcessors() * 2
     )
@@ -45,7 +41,14 @@ class TesseractTextFindProcessor {
         SwingUtilities.invokeLater {
             //FIXME всё ещё по JFrame создаётся на каждый объект
             // производительность это не решает, но выглядит стрёмно
-            val window = DebugWindow()
+            val window = DebugWindow(
+                properties,
+                this::starScanning,
+                this::stopScanning,
+                this::stopApplication,
+                this::printLogs
+            )
+
             properties.targets.forEach { target ->
                window.addFigure(
                    RectangleDebugFigure(
@@ -77,7 +80,9 @@ class TesseractTextFindProcessor {
                 )
             }
         }
+    }
 
+    fun starScanning() {
         scheduler.scheduleWithFixedDelay({
             val beforeDelay = properties.beforeActionsList.delayBetweenActions
             properties.beforeActionsList.listActions.forEach { action ->
@@ -111,7 +116,23 @@ class TesseractTextFindProcessor {
                 customAction.make(Point(action.locationX + 5, action.locationY + 5))
                 Thread.sleep(afterDelay)
             }
-            executor.submit { println("______________________\n${database.getObjectsPeerToday()}\n____________________") }
         }, 0 ,properties.delay, TimeUnit.MILLISECONDS)
+    }
+
+    fun stopScanning() {
+        scheduler.shutdown()
+        if(!scheduler.awaitTermination(1, TimeUnit.SECONDS)) {
+            scheduler.shutdownNow()
+        }
+        scheduler = Executors.newScheduledThreadPool(1)
+    }
+
+    fun stopApplication() {
+        PropertiesParser.writeProperties(propertiesPath, properties)
+        exitProcess(-1)
+    }
+
+    fun printLogs() {
+        executor.submit { println("______________________\n${database.getObjectsPeerToday()}\n____________________") }
     }
 }
